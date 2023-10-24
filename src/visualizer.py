@@ -38,6 +38,7 @@ class Spectrum_Visualizer:
         self.frequency_bin_max_energies  = np.zeros(self.ear.n_frequency_bins)
         self.frequency_bin_energies = self.ear.frequency_bin_energies
         self.bin_text_tags, self.bin_rectangles = [], []
+        self.total_score = 0
 
         #Fixed init params:
         self.start_time = None
@@ -133,7 +134,9 @@ class Spectrum_Visualizer:
             if self.slow_bar_button.click():
                 self.add_slow_bars = not self.add_slow_bars
                 self.slow_features = [0]*self.ear.n_frequency_bins
-
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
         if np.min(self.ear.bin_mean_values) > 0:
             self.frequency_bin_energies = self.avg_energy_height * self.ear.frequency_bin_energies / self.ear.bin_mean_values
 
@@ -159,12 +162,29 @@ class Spectrum_Visualizer:
             self.fps = self.fps_interval / (time.time()-self.start_time)
             self.start_time = time.time()
 
+        
+        #trying to add score
+        self.total_score = self.total_score + max(self.frequency_bin_energies)
+        self.text_score = self.fps_font.render('Score: %.1f' %(self.total_score), True, (255, 255, 255) , (self.bg_color, self.bg_color, self.bg_color))
+        self.text_scoreRect = self.text_score.get_rect() 
+        #trying to add time
+        self.run_time = pygame.time.get_ticks()*.001
+        self.text_runtime = self.fps_font.render('Time: %.1f' %(self.run_time), True, (255, 255, 255) , (self.bg_color, self.bg_color, self.bg_color))
+        self.text_runTimeRect = self.text_runtime.get_rect() 
+        self.text_runTimeRect.x, self.text_runTimeRect.y = round(0.04*self.WIDTH), round(0.04*self.HEIGHT)
+
         self.text = self.fps_font.render('Fps: %.1f' %(self.fps), True, (255, 255, 255) , (self.bg_color, self.bg_color, self.bg_color))
         self.textRect = self.text.get_rect()
-        self.textRect.x, self.textRect.y = round(0.015*self.WIDTH), round(0.03*self.HEIGHT)
+        self.textRect.x, self.textRect.y = round(0.015*self.WIDTH), round(0.08*self.HEIGHT)
         pygame.display.set_caption('Spectrum Analyzer -- (FFT-Peak: %05d Hz)' %self.ear.strongest_frequency)
 
         self.plot_bars()
+
+        #Draw Score
+        self.screen.blit(self.text_score, self.text_scoreRect)
+
+        #Draw Time
+        self.screen.blit(self.text_runtime, self.text_runTimeRect)
 
         #Draw text tags:
         self.screen.blit(self.text, self.textRect)
